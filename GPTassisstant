@@ -18,6 +18,22 @@ r = sr.Recognizer()
 engine = pyttsx3.init()
 bot = telegram.Bot(token=telegram_token)
 
+def main():
+    log_file = open("conversation_log.txt", "a")
+    while True:
+        user_input = listen()
+        log_file.write("User: " + user_input + "\n")
+        if user_input.lower() == 'bye':
+            speak("Goodbye!")
+            log_file.write("Assistant: Goodbye!\n")
+            break
+        response = chatbot.get_response(user_input)
+        if float(response.confidence) < 0.5:
+            response = generate_response(user_input)
+        speak(response)
+        log_file.write("Assistant: " + str(response) + "\n")
+    log_file.close()
+
 def speak(text):
     engine.say(text)
     engine.runAndWait()
