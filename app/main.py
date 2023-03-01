@@ -3,11 +3,12 @@ import pyttsx3
 import openai
 from chatterbot import ChatBot
 from chatterbot.trainers import ChatterBotCorpusTrainer
+import os
 import telegram
 
-openai.api_key = "YOUR_API_KEY"
-telegram_token = "YOUR_TELEGRAM_BOT_TOKEN"
-telegram_chat_id = "YOUR_TELEGRAM_CHAT_ID"
+openai.api_key = os.environ["OPENAI_API_KEY"]
+telegram_token = os.environ["TELEGRAM_TOKEN"]
+telegram_chat_id = os.environ["TELEGRAM_CHAT_ID"]
 
 chatbot = ChatBot('MyChatBot')
 trainer = ChatterBotCorpusTrainer(chatbot)
@@ -16,6 +17,23 @@ trainer.train('chatterbot.corpus.english')
 r = sr.Recognizer()
 engine = pyttsx3.init()
 bot = telegram.Bot(token=telegram_token)
+
+def main():
+    log_file = open("conversation_log.txt", "a")
+    while True:
+        user_input = listen()
+        log_file.write("User: " + user_input + "\n")
+        if user_input.lower() == 'bye':
+            speak("Goodbye!")
+            log_file.write("Assistant: Goodbye!\n")
+            break
+        response = chatbot.get_response(user_input)
+        if float(response.confidence) < 0.5:
+            response = generate_response(user_input)
+        speak(response)
+        log_file.write("Assistant: " + str(response) + "\n")
+        bot.send_message(chat_id=telegram_chat_id, text=response)
+    log_file.close()
 
 def speak(text):
     engine.say(text)
@@ -45,24 +63,6 @@ def listen():
             print("Google Speech Recognition could not understand audio")
         except sr.RequestError as e:
             print("Could not request results from Google Speech Recognition service; {0}".format(e))
-
-def main():
-    log_file = open("conversation_log.txt", "a")
-    while True:
-        user_input = listen()
-        log_file.write("User: " + user_input + "\n")
-        if user_input.lower() == 'bye':
-            speak("Goodbye!")
-            log_file.write("Assistant: Goodbye!\n")
-            bot.send_message(chat_id=telegram_chat_id, text="Assistant: Goodbye!")
-            break
-        response = chatbot.get_response(user_input)
-        if float(response.confidence) < 0.5:
-            response = generate_response(user_input)
-        speak(response)
-        log_file.write("Assistant: " + str(response) + "\n")
-        bot.send_message(chat_id=telegram_chat_id, text="Assistant: " + str(response))
-    log_file.close()
 
 if __name__ == '__main__':
     main()
