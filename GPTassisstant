@@ -4,17 +4,19 @@ import openai
 from chatterbot import ChatBot
 from chatterbot.trainers import ChatterBotCorpusTrainer
 import os
+import telegram
 
 openai.api_key = "YOUR_API_KEY"
+telegram_token = "YOUR_TELEGRAM_BOT_TOKEN"
+telegram_chat_id = "YOUR_TELEGRAM_CHAT_ID"
 
 chatbot = ChatBot('MyChatBot')
-
 trainer = ChatterBotCorpusTrainer(chatbot)
-
 trainer.train('chatterbot.corpus.english')
 
 r = sr.Recognizer()
 engine = pyttsx3.init()
+bot = telegram.Bot(token=telegram_token)
 
 def speak(text):
     engine.say(text)
@@ -55,6 +57,7 @@ def main():
         if float(response.confidence) < 0.5:
             response = generate_response(user_input)
         speak(response)
+        bot.send_message(chat_id=telegram_chat_id, text=response)
 
 if __name__ == '__main__':
     main()
