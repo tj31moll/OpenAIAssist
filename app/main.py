@@ -1,19 +1,22 @@
-import speech_recognition as sr
-import pyttsx3
 import openai
-from chatterbot import ChatBot
-from chatterbot.trainers import ChatterBotCorpusTrainer
 import os
 import telegram
+import speech_recognition as sr
+import pyttsx3
+from chatterbot import ChatBot
+from chatterbot.trainers import ChatterBotCorpusTrainer
 
+# Define environment variables
 openai.api_key = os.environ["OPENAI_API_KEY"]
 telegram_token = os.environ["TELEGRAM_TOKEN"]
 telegram_chat_id = os.environ["TELEGRAM_CHAT_ID"]
 
+# Initialize ChatBot and train with corpus
 chatbot = ChatBot('MyChatBot')
 trainer = ChatterBotCorpusTrainer(chatbot)
 trainer.train('chatterbot.corpus.english')
 
+# Initialize speech recognition and text-to-speech engines
 r = sr.Recognizer()
 engine = pyttsx3.init()
 bot = telegram.Bot(token=telegram_token)
