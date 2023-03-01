@@ -1,6 +1,8 @@
 import speech_recognition as sr
 import pyttsx3
 import openai
+from chatterbot import ChatBot
+from chatterbot.trainers import ChatterBotCorpusTrainer
 import os
 
 openai.api_key = "YOUR_API_KEY"
@@ -18,6 +20,18 @@ def speak(text):
     engine.say(text)
     engine.runAndWait()
 
+def generate_response(prompt):
+    response = openai.Completion.create(
+        engine="text-davinci-002",
+        prompt=prompt,
+        max_tokens=60,
+        n=1,
+        stop=None,
+        temperature=0.5
+    )
+    message = response.choices[0].text.strip()
+    return message
+
 def listen():
     with sr.Microphone() as source:
         print("Say something!")
@@ -31,24 +45,16 @@ def listen():
         except sr.RequestError as e:
             print("Could not request results from Google Speech Recognition service; {0}".format(e))
 
-def generate_response(prompt):
-    response = openai.Completion.create(
-        engine="text-davinci-002",
-        prompt=prompt,
-        max_tokens=60,
-        n=1,
-        stop=None,
-        temperature=0.5
-    )
-    message = response.choices[0].text.strip()
-    return message
+def main():
+    while True:
+        user_input = listen()
+        if user_input.lower() == 'bye':
+            speak("Goodbye!")
+            break
+        response = chatbot.get_response(user_input)
+        if float(response.confidence) < 0.5:
+            response = generate_response(user_input)
+        speak(response)
 
-while True:
-    user_input = listen()
-    if user_input.lower() == 'bye':
-        speak("Goodbye!")
-        break
-    response = chatbot.get_response(user_input)
-    if float(response.confidence) < 0.5:
-        response = generate_response(user_input)
-    speak(response)
+if __name__ == '__main__':
+    main()
