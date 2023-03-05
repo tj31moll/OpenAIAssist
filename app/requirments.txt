@@ -1,5 +1,6 @@
-speechrecognition==3.8.1
-pyttsx3==2.90
 openai==0.10.2
-chatterbot==1.0.8
 python-telegram-bot==13.9
+SpeechRecognition==3.8.1
+pyttsx3==2.90
+ChatterBot==1.1.0
+requests==2.26.0
