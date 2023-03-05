@@ -4,12 +4,14 @@ import telegram
 import speech_recognition as sr
 import pyttsx3
 from chatterbot import ChatBot
-from chatterbot.trainers import ChatterBotCorpusTrainer
+from chatterbot.trainers import ChatterBotCorpusTrainerimport
+import requests
 
 # Define environment variables
 openai.api_key = os.environ["OPENAI_API_KEY"]
 telegram_token = os.environ["TELEGRAM_TOKEN"]
 telegram_chat_id = os.environ["TELEGRAM_CHAT_ID"]
+zapier_webhook_url = os.environ["ZAPIER_WEBHOOK_URL"]
 
 # Initialize ChatBot and train with corpus
 chatbot = ChatBot('MyChatBot')
@@ -30,12 +32,23 @@ def main():
             speak("Goodbye!")
             log_file.write("Assistant: Goodbye!\n")
             break
-        response = chatbot.get_response(user_input)
-        if float(response.confidence) < 0.5:
-            response = generate_response(user_input)
-        speak(response)
-        log_file.write("Assistant: " + str(response) + "\n")
-        bot.send_message(chat_id=telegram_chat_id, text=response)
+        elif user_input.lower().startswith('hey google'):
+            send_to_zapier(user_input)
+        elif user_input.lower().startswith('chatbot'):
+            response = chatbot.get_response(user_input[7:])
+            send_to_telegram(response)
+            speak(response)
+            log_file.write("Assistant: " + str(response) + "\n")
+        elif user_input.lower().startswith('openai'):
+            response = generate_response(user_input[7:])
+            send_to_telegram(response)
+            speak(response)
+            log_file.write("Assistant: " + str(response) + "\n")
+        else:
+            response = chatbot.get_response(user_input)
+            send_to_telegram(response)
+            speak(response)
+            log_file.write("Assistant: " + str(response) + "\n")
     log_file.close()
 
 def speak(text):
@@ -66,6 +79,14 @@ def listen():
             print("Google Speech Recognition could not understand audio")
         except sr.RequestError as e:
             print("Could not request results from Google Speech Recognition service; {0}".format(e))
+
+def send_to_zapier(message):
+    data = {"message": message}
+    response = requests.post(zapier_webhook_url, data=data)
+    print(response.text)
+
+def send_to_telegram(message):
+    bot.send_message(chat_id=telegram_chat_id, text=message)
 
 if __name__ == '__main__':
     main()
